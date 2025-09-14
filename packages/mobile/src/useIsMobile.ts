@@ -1,3 +1,4 @@
+'use client';
 import { useState, useEffect, useCallback } from 'react';
 
 export interface UseIsMobileOptions {
@@ -87,12 +88,12 @@ export function useIsMobile(
 
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
-    const w = window.innerWidth || 1024;
+    const w = window?.innerWidth || 1024;
     return w < breakpoint;
   });
   const [width, setWidth] = useState(() => {
     if (typeof window === 'undefined') return 0;
-    return window.innerWidth || 1024;
+    return window?.innerWidth || 1024;
   });
   const [height, setHeight] = useState(() => {
     if (typeof window === 'undefined') return 0;
@@ -103,7 +104,7 @@ export function useIsMobile(
   const updateDimensions = useCallback(() => {
     if (typeof window === 'undefined') return;
 
-    const newWidth = window.innerWidth;
+    const newWidth = window?.innerWidth;
     const newHeight = window.innerHeight;
 
     setWidth(newWidth);
