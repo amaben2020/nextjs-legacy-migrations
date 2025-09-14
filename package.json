@@ -11,16 +11,7 @@
     "test:local-sa": "cd apps/local-sa && pnpm test:e2e",
     "test:all": "turbo run test --filter=./apps/*",
     "audit": "pnpm audit --audit-level moderate",
-    "dev:local-sa": "turbo run dev --filter=./apps/local-sa --filter=./packages/*",
-    "dev:local-api": "turbo run dev --filter=./apps/local-api --filter=./packages/*",
-    "dev:bff-sa": "turbo run dev --filter=./apps/bff-sa --filter=./apps/api-rest --filter=./packages/*",
-    "dev:bff-api": "turbo run dev --filter=./apps/bff-api --filter=./apps/api-rest --filter=./packages/*",
-    "dev:bff-trpc": "turbo run dev --filter=./apps/bff-trpc --filter=./apps/api-rest --filter=./packages/*",
-    "dev:bff-gql": "turbo run dev --filter=./apps/bff-gql --filter=./apps/api-gql --filter=./packages/*",
-    "dev:bff-twirp": "turbo run dev --filter=./apps/bff-twirp --filter=./apps/api-twirp --filter=./packages/*",
-    "dev:external-api-domain": "FRONTEND_SERVER=http://localhost:3005 turbo run dev --filter=./apps/external-api-domain --filter=./apps/api-rest --filter=./packages/*",
-    "dev:external-proxied": "FRONTEND_SERVER=http://localhost:3003 turbo run dev --filter=./apps/external-proxied --filter=./apps/api-rest --filter=./packages/*",
-    "dev:external-token": "FRONTEND_SERVER=http://localhost:3004 turbo run dev --filter=./apps/external-token --filter=./apps/api-rest-token --filter=./packages/*"
+    "dev:local-sa": "turbo run dev --filter=./apps/local-sa --filter=./packages/*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
