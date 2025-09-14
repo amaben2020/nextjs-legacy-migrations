@@ -11,7 +11,8 @@
     "test:local-sa": "cd apps/local-sa && pnpm test:e2e",
     "test:all": "turbo run test --filter=./apps/*",
     "audit": "pnpm audit --audit-level moderate",
-    "dev:local-sa": "turbo run dev --filter=./apps/local-sa --filter=./packages/*"
+    "dev:local-sa": "turbo run dev --filter=./apps/local-sa --filter=./packages/*",
+    "dev": "turbo run dev --filter=./apps/* --filter=./packages/*"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
