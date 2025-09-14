@@ -1,0 +1,195 @@
+name: PR Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9.1.0'
+
+jobs:
+  # Quick checks for PRs
+  pr-checks:
+    name: PR Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint check
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm build --filter=@repo/*
+
+      - name: Build check
+        run: pnpm build
+
+      - name: Security audit
+        run: pnpm audit --audit-level high
+
+  # Run tests for affected apps only
+  test-affected:
+    name: Test Affected Apps
+    runs-on: ubuntu-latest
+    needs: pr-checks
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build packages
+        run: pnpm build
+
+      - name: Check if local-sa was affected
+        id: check-local-sa
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -E '^apps/local-sa/|^packages/' > /dev/null; then
+            echo "affected=true" >> $GITHUB_OUTPUT
+          else
+            echo "affected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Test local-sa if affected
+        if: steps.check-local-sa.outputs.affected == 'true'
+        run: |
+          cd apps/local-sa
+
+          # Start server in background
+          pnpm dev &
+          SERVER_PID=$!
+
+          # Wait for server to be ready
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+          # Run tests
+          pnpm test:e2e
+
+          # Clean up
+          kill $SERVER_PID
+        env:
+          NEXTAUTH_SECRET: test-secret
+          NEXTAUTH_URL: http://localhost:3000
+          CYPRESS_baseUrl: http://localhost:3000
+
+  # Comment on PR with test results
+  pr-comment:
+    name: Comment on PR
+    runs-on: ubuntu-latest
+    needs: [pr-checks, test-affected]
+    if: always()
+    steps:
+      - name: Comment PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('## 🧪 Test Results')
+            );
+
+            const prChecksStatus = '${{ needs.pr-checks.result }}';
+            const testAffectedStatus = '${{ needs.test-affected.result }}';
+
+            let status = '✅ All checks passed!';
+            if (prChecksStatus === 'failure' || testAffectedStatus === 'failure') {
+              status = '❌ Some checks failed!';
+            } else if (prChecksStatus === 'cancelled' || testAffectedStatus === 'cancelled') {
+              status = '⏸️ Checks were cancelled';
+            }
+
+            const body = `## 🧪 Test Results
+
+            | Check | Status |
+            |-------|--------|
+            | Lint & Type Check | ${{ needs.pr-checks.result == 'success' && '✅' || '❌' }} |
+            | Build | ${{ needs.pr-checks.result == 'success' && '✅' || '❌' }} |
+            | Security Audit | ${{ needs.pr-checks.result == 'success' && '✅' || '❌' }} |
+            | Tests | ${{ needs.test-affected.result == 'success' && '✅' || needs.test-affected.result == 'skipped' && '⏭️' || '❌' }} |
+
+            **Overall Status:** ${status}
+
+            <details>
+            <summary>View Details</summary>
+
+            - **PR Checks:** ${{ needs.pr-checks.result }}
+            - **Test Affected:** ${{ needs.test-affected.result }}
+            - **Local-sa Affected:** ${{ steps.check-local-sa.outputs.affected }}
+
+            </details>`;
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

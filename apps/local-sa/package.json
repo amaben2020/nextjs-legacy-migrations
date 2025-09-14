@@ -1,0 +1,53 @@
+{
+  "name": "local-sa",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "PORT=3000 next dev",
+    "build": "next build",
+    "start": "PORT=3000 next start",
+    "lint": "next lint",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:run:component": "cypress run --component",
+    "cypress:run:e2e": "cypress run --e2e",
+    "test:e2e": "cypress run --e2e",
+    "test:component": "cypress run --component"
+  },
+  "dependencies": {
+    "@radix-ui/react-avatar": "^1.1.0",
+    "@radix-ui/react-checkbox": "^1.1.0",
+    "@radix-ui/react-label": "^2.1.0",
+    "@radix-ui/react-select": "^2.1.2",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@repo/auth": "workspace:*",
+    "@repo/mobile": "workspace:^",
+    "@repo/todos": "workspace:*",
+    "@repo/ui": "workspace:*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "jose": "^5.2.4",
+    "lucide-react": "^0.373.0",
+    "next": "^15.0.3",
+    "next-auth": "5.0.0-beta.25",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "tailwind-merge": "^2.3.0",
+    "tailwindcss-animate": "^1.0.7"
+  },
+  "devDependencies": {
+    "@cypress/react": "^9.0.1",
+    "@cypress/webpack-dev-server": "^5.1.1",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "cypress": "^15.2.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
+}
