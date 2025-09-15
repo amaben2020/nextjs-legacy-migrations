@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import React from 'react';
 
 const DashboardPage = ({ posts }: { posts: any }) => {
@@ -7,11 +6,11 @@ const DashboardPage = ({ posts }: { posts: any }) => {
       DashboardPage
       <div>
         <ul>
-          {posts.map((post: any) => (
+          {posts?.map((post: any) => (
             <li key={post.id} className="bg-gray-600 p-2 m-2">
-              <Link href={`/dashboard/${post.id}`} className="text-white">
+              <a href={`/dashboard/${post.id}`} className="text-white">
                 {post.id} -- {post.title}
-              </Link>
+              </a>
             </li>
           ))}
         </ul>
